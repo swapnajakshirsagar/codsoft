@@ -1,0 +1,36 @@
+import java.util.Scanner;
+import java.util.Random;
+
+public class GuessTheNumber {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        int minRange = 1;
+        int maxRange = 100;
+
+                int randomNumber = random.nextInt(maxRange - minRange + 1) + minRange;
+
+        System.out.println("Welcome to Guess the Number game!");
+        System.out.println("I've picked a number between " + minRange + " and " + maxRange + ". Try to guess it!");
+
+        int guess;
+        boolean correct = false;
+
+                while (!correct) {
+            System.out.print("Enter your guess: ");
+            guess = scanner.nextInt();
+
+            if (guess == randomNumber) {
+                System.out.println("Congratulations! You've guessed the correct number.");
+                correct = true;
+            } else if (guess < randomNumber) {
+                System.out.println("Too low! Try guessing higher.");
+            } else {
+                System.out.println("Too high! Try guessing lower.");
+            }
+        }
+
+        scanner.close();
+    }
+}
