@@ -1,0 +1,131 @@
+import java.util.Scanner;
+import java.net.*;
+import java.io.*;
+import org.json.JSONObject;
+
+// Class representing the user's bank account
+class BankAccount {
+    private double balance;
+    private String currency;
+
+    public BankAccount(double balance, String currency) {
+        this.balance = balance;
+        this.currency = currency;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+        System.out.println("Deposited: " + amount + " " + currency);
+    }
+
+    public void withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            System.out.println("Withdrawn: " + amount + " " + currency);
+        } else {
+            System.out.println("Insufficient funds");
+        }
+    }
+}
+
+// Class representing the ATM machine
+public class ATM {
+    private BankAccount bankAccount;
+    private String baseCurrency;
+    private String targetCurrency;
+    private double exchangeRate;
+
+    public ATM(BankAccount bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
+    public void displayMenu() {
+        System.out.println("ATM Menu:");
+        System.out.println("1. Check Balance");
+        System.out.println("2. Deposit");
+        System.out.println("3. Withdraw");
+        System.out.println("4. Convert Currency");
+        System.out.println("5. Exit");
+        System.out.print("Enter choice: ");
+    }
+
+    public void processChoice(int choice) {
+        Scanner scanner = new Scanner(System.in);
+        switch (choice) {
+            case 1:
+                System.out.println("Current Balance: " + bankAccount.getBalance() + " " + bankAccount.getCurrency());
+                break;
+            case 2:
+                System.out.print("Enter amount to deposit: ");
+                double depositAmount = scanner.nextDouble();
+                bankAccount.deposit(depositAmount);
+                break;
+            case 3:
+                System.out.print("Enter amount to withdraw: ");
+                double withdrawAmount = scanner.nextDouble();
+                bankAccount.withdraw(withdrawAmount);
+                break;
+            case 4:
+                System.out.print("Enter base currency: ");
+                baseCurrency = scanner.next().toUpperCase();
+                System.out.print("Enter target currency: ");
+                targetCurrency = scanner.next().toUpperCase();
+                System.out.print("Enter amount to convert: ");
+                double amountToConvert = scanner.nextDouble();
+                exchangeRate = fetchExchangeRate(baseCurrency, targetCurrency);
+                if (exchangeRate != -1) {
+                    double convertedAmount = amountToConvert * exchangeRate;
+                    System.out.println("Converted amount: " + convertedAmount + " " + targetCurrency);
+                }
+                break;
+            case 5:
+                System.out.println("Thank you for using the ATM. Goodbye!");
+                System.exit(0);
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+        }
+    }
+
+    public double fetchExchangeRate(String baseCurrency, String targetCurrency) {
+        try {
+            URL url = new URL("https://api.exchangerate-api.com/v4/latest/" + baseCurrency);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            JSONObject jsonObject = new JSONObject(response.toString());
+            JSONObject rates = jsonObject.getJSONObject("rates");
+            return rates.getDouble(targetCurrency);
+        } catch (Exception e) {
+            System.out.println("Error fetching exchange rate: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static void main(String[] args) {
+        BankAccount account = new BankAccount(1000, "USD"); // Initialize with a balance of $1000
+        ATM atm = new ATM(account);
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            atm.displayMenu();
+            int choice = scanner.nextInt();
+            atm.processChoice(choice);
+        }
+    }
+}
